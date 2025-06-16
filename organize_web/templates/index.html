@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organize Config Editor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container glass">
+    <h1>Organize Config Editor</h1>
+
+    <section>
+      <h2>Anchors</h2>
+      <input id="anchor-key" placeholder="Variable name (e.g. work_folders)" />
+      <input id="anchor-name" placeholder="Anchor name (e.g. work)" />
+      <input id="anchor-values" placeholder="Values comma separated" />
+      <button onclick="addAnchor()">Add Anchor</button>
+      <ul id="anchor-list"></ul>
+    </section>
+
+    <section>
+      <h2>Rules</h2>
+      <input id="rule-name" placeholder="Rule name" />
+      <select id="rule-location"></select>
+      <label><input type="checkbox" id="rule-subfolders" /> Subfolders</label>
+      <select id="rule-targets">
+        <option value="files">files</option>
+        <option value="dirs">dirs</option>
+      </select>
+      <input id="rule-filter" placeholder="Filter keywords comma separated" />
+      <input id="rule-move" placeholder="Move path" />
+      <button onclick="addRule()">Add Rule</button>
+      <ul id="rule-list"></ul>
+    </section>
+
+    <button onclick="downloadYaml()">Download YAML</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
