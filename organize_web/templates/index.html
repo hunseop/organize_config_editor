@@ -20,10 +20,10 @@
       <input id="anchor-key" placeholder="Variable name (e.g. work_folders)" />
       <input id="anchor-name" placeholder="Anchor name (e.g. work)" />
       <input id="anchor-values" placeholder="Values comma separated" />
-      <button onclick="addAnchor()">Add Anchor</button>
+      <button id="add-anchor-btn" onclick="addAnchor()">Add Anchor</button>
       <table id="anchor-table">
         <thead>
-          <tr><th>Key</th><th>Anchor</th><th>Values</th><th></th></tr>
+          <tr><th>Key</th><th>Anchor</th><th>Values</th><th>Edit</th><th>Del</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -34,10 +34,10 @@
       <input id="kw-key" placeholder="Variable name (e.g. fw_filter)" />
       <input id="kw-name" placeholder="Anchor name (e.g. fw)" />
       <input id="kw-values" placeholder="Keywords comma separated" />
-      <button onclick="addKeywordAnchor()">Add Keyword Anchor</button>
+      <button id="add-kw-btn" onclick="addKeywordAnchor()">Add Keyword Anchor</button>
       <table id="kw-anchor-table">
         <thead>
-          <tr><th>Key</th><th>Anchor</th><th>Values</th><th></th></tr>
+          <tr><th>Key</th><th>Anchor</th><th>Values</th><th>Edit</th><th>Del</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -55,11 +55,11 @@
       <select id="rule-filter-anchor"></select>
       <input id="rule-filter" placeholder="Filter keywords comma separated" />
       <input id="rule-move" placeholder="Move path" />
-      <button onclick="addRule()">Add Rule</button>
+      <button id="add-rule-btn" onclick="addRule()">Add Rule</button>
       <table id="rule-table">
         <thead>
           <tr>
-            <th>Name</th><th>Location</th><th>Targets</th><th>Sub</th><th>Filter</th><th>Move</th><th></th>
+            <th>Name</th><th>Location</th><th>Targets</th><th>Sub</th><th>Filter</th><th>Move</th><th>Edit</th><th>Del</th>
           </tr>
         </thead>
         <tbody></tbody>

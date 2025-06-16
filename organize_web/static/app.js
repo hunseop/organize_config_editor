@@ -1,6 +1,9 @@
 let anchors = [];
 let keywordAnchors = [];
 let rules = [];
+let anchorEdit = -1;
+let kwEdit = -1;
+let ruleEdit = -1;
 
 function updateAnchorList() {
   const tbody = document.querySelector('#anchor-table tbody');
@@ -8,12 +11,18 @@ function updateAnchorList() {
   anchors.forEach((a, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
-    const tdBtn = document.createElement('td');
-    const btn = document.createElement('button');
-    btn.textContent = 'X';
-    btn.onclick = () => { anchors.splice(idx,1); updateAnchorList(); updateRuleList(); };
-    tdBtn.appendChild(btn);
-    tr.appendChild(tdBtn);
+    const tdEdit = document.createElement('td');
+    const edit = document.createElement('button');
+    edit.textContent = 'Edit';
+    edit.onclick = () => editAnchor(idx);
+    tdEdit.appendChild(edit);
+    const tdDel = document.createElement('td');
+    const del = document.createElement('button');
+    del.textContent = 'X';
+    del.onclick = () => { anchors.splice(idx,1); updateAnchorList(); updateRuleList(); };
+    tdDel.appendChild(del);
+    tr.appendChild(tdEdit);
+    tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
 
@@ -32,11 +41,26 @@ function addAnchor() {
   const name = document.getElementById('anchor-name').value.trim();
   const values = document.getElementById('anchor-values').value.split(',').map(v => v.trim()).filter(v => v);
   if (!key || !name || values.length === 0) return;
-  anchors.push({ key, name, values });
+  if (anchorEdit !== -1) {
+    anchors[anchorEdit] = { key, name, values };
+    anchorEdit = -1;
+    document.getElementById('add-anchor-btn').textContent = 'Add Anchor';
+  } else {
+    anchors.push({ key, name, values });
+  }
   document.getElementById('anchor-key').value = '';
   document.getElementById('anchor-name').value = '';
   document.getElementById('anchor-values').value = '';
   updateAnchorList();
+}
+
+function editAnchor(idx) {
+  const a = anchors[idx];
+  document.getElementById('anchor-key').value = a.key;
+  document.getElementById('anchor-name').value = a.name;
+  document.getElementById('anchor-values').value = a.values.join(', ');
+  anchorEdit = idx;
+  document.getElementById('add-anchor-btn').textContent = 'Update Anchor';
 }
 
 function updateKeywordAnchorList() {
@@ -45,12 +69,18 @@ function updateKeywordAnchorList() {
   keywordAnchors.forEach((a, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
-    const tdBtn = document.createElement('td');
-    const btn = document.createElement('button');
-    btn.textContent = 'X';
-    btn.onclick = () => { keywordAnchors.splice(idx,1); updateKeywordAnchorList(); updateRuleFilterAnchors(); };
-    tdBtn.appendChild(btn);
-    tr.appendChild(tdBtn);
+    const tdEdit = document.createElement('td');
+    const edit = document.createElement('button');
+    edit.textContent = 'Edit';
+    edit.onclick = () => editKeywordAnchor(idx);
+    tdEdit.appendChild(edit);
+    const tdDel = document.createElement('td');
+    const del = document.createElement('button');
+    del.textContent = 'X';
+    del.onclick = () => { keywordAnchors.splice(idx,1); updateKeywordAnchorList(); updateRuleFilterAnchors(); };
+    tdDel.appendChild(del);
+    tr.appendChild(tdEdit);
+    tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
   updateRuleFilterAnchors();
@@ -61,11 +91,26 @@ function addKeywordAnchor() {
   const name = document.getElementById('kw-name').value.trim();
   const values = document.getElementById('kw-values').value.split(',').map(v => v.trim()).filter(v => v);
   if (!key || !name || values.length === 0) return;
-  keywordAnchors.push({ key, name, values });
+  if (kwEdit !== -1) {
+    keywordAnchors[kwEdit] = { key, name, values };
+    kwEdit = -1;
+    document.getElementById('add-kw-btn').textContent = 'Add Keyword Anchor';
+  } else {
+    keywordAnchors.push({ key, name, values });
+  }
   document.getElementById('kw-key').value = '';
   document.getElementById('kw-name').value = '';
   document.getElementById('kw-values').value = '';
   updateKeywordAnchorList();
+}
+
+function editKeywordAnchor(idx) {
+  const a = keywordAnchors[idx];
+  document.getElementById('kw-key').value = a.key;
+  document.getElementById('kw-name').value = a.name;
+  document.getElementById('kw-values').value = a.values.join(', ');
+  kwEdit = idx;
+  document.getElementById('add-kw-btn').textContent = 'Update Keyword Anchor';
 }
 
 function updateRuleFilterAnchors() {
@@ -87,12 +132,18 @@ function updateRuleList() {
     const filterText = r.filter_anchor ? `*${r.filter_anchor}` : r.filter.join(', ');
     tr.innerHTML = `<td>${r.name}</td><td>*${r.location}</td><td>${r.targets}</td>` +
       `<td>${r.subfolders ? '✓' : ''}</td><td>${filterText}</td><td>${r.move}</td>`;
-    const tdBtn = document.createElement('td');
-    const btn = document.createElement('button');
-    btn.textContent = 'X';
-    btn.onclick = () => { rules.splice(idx,1); updateRuleList(); };
-    tdBtn.appendChild(btn);
-    tr.appendChild(tdBtn);
+    const tdEdit = document.createElement('td');
+    const edit = document.createElement('button');
+    edit.textContent = 'Edit';
+    edit.onclick = () => editRule(idx);
+    tdEdit.appendChild(edit);
+    const tdDel = document.createElement('td');
+    const del = document.createElement('button');
+    del.textContent = 'X';
+    del.onclick = () => { rules.splice(idx,1); updateRuleList(); };
+    tdDel.appendChild(del);
+    tr.appendChild(tdEdit);
+    tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
 }
@@ -106,11 +157,30 @@ function addRule() {
   const filter = document.getElementById('rule-filter').value.split(',').map(v => v.trim()).filter(v => v);
   const move = document.getElementById('rule-move').value.trim();
   if (!name || !move) return;
-  rules.push({ name, location, subfolders, targets, filter, filter_anchor: filterAnchor, move });
+  if (ruleEdit !== -1) {
+    rules[ruleEdit] = { name, location, subfolders, targets, filter, filter_anchor: filterAnchor, move };
+    ruleEdit = -1;
+    document.getElementById('add-rule-btn').textContent = 'Add Rule';
+  } else {
+    rules.push({ name, location, subfolders, targets, filter, filter_anchor: filterAnchor, move });
+  }
   document.getElementById('rule-name').value = '';
   document.getElementById('rule-filter').value = '';
   document.getElementById('rule-move').value = '';
   updateRuleList();
+}
+
+function editRule(idx) {
+  const r = rules[idx];
+  document.getElementById('rule-name').value = r.name;
+  document.getElementById('rule-location').value = r.location;
+  document.getElementById('rule-subfolders').checked = r.subfolders;
+  document.getElementById('rule-targets').value = r.targets;
+  document.getElementById('rule-filter-anchor').value = r.filter_anchor || '';
+  document.getElementById('rule-filter').value = r.filter.join(', ');
+  document.getElementById('rule-move').value = r.move;
+  ruleEdit = idx;
+  document.getElementById('add-rule-btn').textContent = 'Update Rule';
 }
 
 function downloadYaml() {
