@@ -7,14 +7,14 @@ let kwEdit = -1;
 let ruleEdit = -1;
 
 function browsePath() {
-  const picker = document.getElementById('file-picker');
-  picker.onchange = () => {
-    if (picker.files.length > 0) {
-      const f = picker.files[0];
-      document.getElementById('config-path').value = f.path || f.name;
-    }
-  };
-  picker.click();
+  fetch('/browse', { method: 'POST' })
+    .then(resp => resp.json())
+    .then(data => {
+      if (data.path) {
+        document.getElementById('config-path').value = data.path;
+        loadYaml();
+      }
+    });
 }
 
 function updateAnchorList() {

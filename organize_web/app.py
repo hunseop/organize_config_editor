@@ -141,6 +141,21 @@ def load_yaml():
     return jsonify(data)
 
 
+@app.route('/browse', methods=['POST'])
+def browse_yaml():
+    """Open a native file dialog on the server to select a YAML file."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        path = filedialog.askopenfilename(filetypes=[('YAML files', '*.yaml'), ('All files', '*.*')])
+        root.destroy()
+    except Exception:
+        path = ''
+    return jsonify({'path': path})
+
+
 @app.route('/export', methods=['POST'])
 def export_yaml():
     req = request.get_json()
