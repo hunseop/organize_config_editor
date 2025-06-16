@@ -12,8 +12,10 @@
 
     <div class="path-row">
       <input id="config-path" value="organize_web/config.yaml" placeholder="config.yaml path" />
+      <button onclick="browsePath()">Browse</button>
       <button onclick="loadYaml()">Load</button>
       <button onclick="saveYaml()">Save</button>
+      <input type="file" id="file-picker" style="display:none" accept=".yaml" />
     </div>
 
     <section>
@@ -67,7 +69,7 @@
       </table>
     </section>
 
-    <button onclick="saveYaml()">Save YAML</button>
+    <button onclick="downloadYaml()">Download YAML</button>
   </div>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>

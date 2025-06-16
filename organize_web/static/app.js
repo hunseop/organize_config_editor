@@ -6,6 +6,17 @@ let anchorEdit = -1;
 let kwEdit = -1;
 let ruleEdit = -1;
 
+function browsePath() {
+  const picker = document.getElementById('file-picker');
+  picker.onchange = () => {
+    if (picker.files.length > 0) {
+      const f = picker.files[0];
+      document.getElementById('config-path').value = f.path || f.name;
+    }
+  };
+  picker.click();
+}
+
 function updateAnchorList() {
   const tbody = document.querySelector('#anchor-table tbody');
   tbody.innerHTML = '';
@@ -192,6 +203,24 @@ function saveYaml() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path, data: { anchors, keyword_anchors: keywordAnchors, rules } })
   }).then(resp => resp.json()).then(() => alert('Saved')); 
+}
+
+function downloadYaml() {
+  fetch('/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: { anchors, keyword_anchors: keywordAnchors, rules } })
+  })
+    .then(resp => resp.json())
+    .then(data => {
+      const blob = new Blob([data.yaml], { type: 'text/plain;charset=cp949' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'config.yaml';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 }
 
 function loadYaml() {

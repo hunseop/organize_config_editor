@@ -121,10 +121,10 @@ def save_yaml():
         os.makedirs(hist_dir, exist_ok=True)
         ts = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
         backup = os.path.join(hist_dir, f'config_{ts}.yaml')
-        with open(path, 'r', encoding='utf-8') as rf, open(backup, 'w', encoding='utf-8') as bf:
+        with open(path, 'r', encoding='cp949') as rf, open(backup, 'w', encoding='cp949') as bf:
             bf.write(rf.read())
 
-    with open(path, 'w', encoding='utf-8') as f:
+    with open(path, 'w', encoding='cp949') as f:
         f.write(yaml_text)
     return jsonify({'status': 'ok'})
 
@@ -135,10 +135,18 @@ def load_yaml():
     path = req.get('path') or CONFIG_PATH
     if not os.path.isfile(path):
         return jsonify({'anchors': [], 'keyword_anchors': [], 'rules': []})
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, 'r', encoding='cp949') as f:
         content = f.read()
     data = parse_yaml(content)
     return jsonify(data)
+
+
+@app.route('/export', methods=['POST'])
+def export_yaml():
+    req = request.get_json()
+    data = req.get('data', {})
+    yaml_text = build_yaml(data)
+    return jsonify({'yaml': yaml_text})
 
 if __name__ == '__main__':
     app.run(debug=True)
