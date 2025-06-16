@@ -10,9 +10,10 @@
   <div class="container glass">
     <h1>Organize Config Editor</h1>
 
-    <div>
-      <input type="file" id="yaml-file" />
-      <button onclick="loadYaml()">Load YAML</button>
+    <div class="path-row">
+      <input id="config-path" value="organize_web/config.yaml" placeholder="config.yaml path" />
+      <button onclick="loadYaml()">Load</button>
+      <button onclick="saveYaml()">Save</button>
     </div>
 
     <section>
@@ -66,7 +67,7 @@
       </table>
     </section>
 
-    <button onclick="downloadYaml()">Download YAML</button>
+    <button onclick="saveYaml()">Save YAML</button>
   </div>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>

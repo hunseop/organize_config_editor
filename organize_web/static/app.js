@@ -1,6 +1,7 @@
 let anchors = [];
 let keywordAnchors = [];
 let rules = [];
+let configPath = '';
 let anchorEdit = -1;
 let kwEdit = -1;
 let ruleEdit = -1;
@@ -183,28 +184,24 @@ function editRule(idx) {
   document.getElementById('add-rule-btn').textContent = 'Update Rule';
 }
 
-function downloadYaml() {
-  fetch('/download', {
+function saveYaml() {
+  const path = document.getElementById('config-path').value.trim();
+  configPath = path;
+  fetch('/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ anchors, keyword_anchors: keywordAnchors, rules })
-  }).then(resp => resp.blob())
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'config.yaml';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    });
+    body: JSON.stringify({ path, data: { anchors, keyword_anchors: keywordAnchors, rules } })
+  }).then(resp => resp.json()).then(() => alert('Saved')); 
 }
 
 function loadYaml() {
-  const fileInput = document.getElementById('yaml-file');
-  if (!fileInput.files.length) return;
-  const formData = new FormData();
-  formData.append('file', fileInput.files[0]);
-  fetch('/load', { method: 'POST', body: formData })
+  const path = document.getElementById('config-path').value.trim();
+  configPath = path;
+  fetch('/load', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path })
+  })
     .then(resp => resp.json())
     .then(data => {
       anchors = data.anchors || [];

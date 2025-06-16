@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, jsonify
+import os
+import datetime
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import io
@@ -105,21 +107,36 @@ def parse_yaml(text):
 def index():
     return render_template('index.html')
 
-@app.route('/download', methods=['POST'])
-def download_yaml():
-    data = request.get_json()
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.yaml')
+
+@app.route('/save', methods=['POST'])
+def save_yaml():
+    req = request.get_json()
+    path = req.get('path') or CONFIG_PATH
+    data = req.get('data', {})
     yaml_text = build_yaml(data)
-    file_io = io.BytesIO(yaml_text.encode('utf-8'))
-    file_io.seek(0)
-    return send_file(file_io, as_attachment=True, download_name='config.yaml', mimetype='text/yaml')
+
+    if os.path.exists(path):
+        hist_dir = os.path.join(os.path.dirname(path), 'history')
+        os.makedirs(hist_dir, exist_ok=True)
+        ts = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        backup = os.path.join(hist_dir, f'config_{ts}.yaml')
+        with open(path, 'r', encoding='utf-8') as rf, open(backup, 'w', encoding='utf-8') as bf:
+            bf.write(rf.read())
+
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(yaml_text)
+    return jsonify({'status': 'ok'})
 
 
 @app.route('/load', methods=['POST'])
 def load_yaml():
-    file = request.files.get('file')
-    if not file:
+    req = request.get_json()
+    path = req.get('path') or CONFIG_PATH
+    if not os.path.isfile(path):
         return jsonify({'anchors': [], 'keyword_anchors': [], 'rules': []})
-    content = file.read().decode('utf-8')
+    with open(path, 'r', encoding='utf-8') as f:
+        content = f.read()
     data = parse_yaml(content)
     return jsonify(data)
 
