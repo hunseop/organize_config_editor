@@ -22,6 +22,7 @@ function updateAnchorList() {
   tbody.innerHTML = '';
   anchors.forEach((a, idx) => {
     const tr = document.createElement('tr');
+    tr.classList.add('fade-enter');
     tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
     const tdEdit = document.createElement('td');
     const edit = document.createElement('button');
@@ -80,6 +81,7 @@ function updateKeywordAnchorList() {
   tbody.innerHTML = '';
   keywordAnchors.forEach((a, idx) => {
     const tr = document.createElement('tr');
+    tr.classList.add('fade-enter');
     tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
     const tdEdit = document.createElement('td');
     const edit = document.createElement('button');
@@ -141,6 +143,7 @@ function updateRuleList() {
   tbody.innerHTML = '';
   rules.forEach((r, idx) => {
     const tr = document.createElement('tr');
+    tr.classList.add('fade-enter');
     const filterText = r.filter_anchor ? `*${r.filter_anchor}` : r.filter.join(', ');
     tr.innerHTML = `<td>${r.name}</td><td>*${r.location}</td><td>${r.targets}</td>` +
       `<td>${r.subfolders ? '✓' : ''}</td><td>${filterText}</td><td>${r.move}</td>`;

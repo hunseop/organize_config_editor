@@ -18,16 +18,21 @@ def build_yaml(data):
     anchor_objects = {}
     for a in anchors + keyword_anchors:
         seq = CommentedSeq(a.get('values', []))
-        seq.yaml_set_anchor(a.get('name'))
+        name = a.get('name')
+        if name:
+            seq.yaml_set_anchor(name)
+            anchor_objects[name] = seq
         root[a.get('key')] = seq
-        anchor_objects[a.get('name')] = seq
 
     rules_seq = CommentedSeq()
     for r in rules:
         rm = CommentedMap()
         rm['name'] = r.get('name')
         loc_anchor = r.get('location')
-        rm['locations'] = anchor_objects.get(loc_anchor, loc_anchor)
+        if loc_anchor and loc_anchor in anchor_objects:
+            rm['locations'] = anchor_objects[loc_anchor]
+        else:
+            rm['locations'] = loc_anchor
         rm['subfolders'] = bool(r.get('subfolders'))
         rm['targets'] = r.get('targets')
         filt_words = r.get('filter', [])
@@ -35,8 +40,8 @@ def build_yaml(data):
         if filt_words or filt_anchor:
             filt = CommentedMap()
             name_map = CommentedMap()
-            if filt_anchor:
-                name_map['contains'] = anchor_objects.get(filt_anchor, filt_anchor)
+            if filt_anchor and filt_anchor in anchor_objects:
+                name_map['contains'] = anchor_objects[filt_anchor]
             else:
                 name_map['contains'] = CommentedSeq(filt_words)
             name_map['case_sensitive'] = False
