@@ -10,3 +10,4 @@ python organize_web/app.py
 ```
 
 브라우저에서 `http://localhost:5000` 에 접속하면 GUI를 사용할 수 있습니다. 작성한 설정은 `Download YAML` 버튼을 통해 `config.yaml` 파일로 저장됩니다.
+앵커와 규칙은 테이블 형태로 표시되며 삭제 버튼으로 손쉽게 수정할 수 있습니다.

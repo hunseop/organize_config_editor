@@ -16,7 +16,12 @@
       <input id="anchor-name" placeholder="Anchor name (e.g. work)" />
       <input id="anchor-values" placeholder="Values comma separated" />
       <button onclick="addAnchor()">Add Anchor</button>
-      <ul id="anchor-list"></ul>
+      <table id="anchor-table">
+        <thead>
+          <tr><th>Key</th><th>Anchor</th><th>Values</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
     <section>
@@ -31,7 +36,14 @@
       <input id="rule-filter" placeholder="Filter keywords comma separated" />
       <input id="rule-move" placeholder="Move path" />
       <button onclick="addRule()">Add Rule</button>
-      <ul id="rule-list"></ul>
+      <table id="rule-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Location</th><th>Targets</th><th>Sub</th><th>Filter</th><th>Move</th><th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
     <button onclick="downloadYaml()">Download YAML</button>

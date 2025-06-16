@@ -2,12 +2,18 @@ let anchors = [];
 let rules = [];
 
 function updateAnchorList() {
-  const list = document.getElementById('anchor-list');
-  list.innerHTML = '';
-  anchors.forEach(a => {
-    const li = document.createElement('li');
-    li.textContent = `${a.key}: &${a.name} -> [${a.values.join(', ')}]`;
-    list.appendChild(li);
+  const tbody = document.querySelector('#anchor-table tbody');
+  tbody.innerHTML = '';
+  anchors.forEach((a, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
+    const tdBtn = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.textContent = 'X';
+    btn.onclick = () => { anchors.splice(idx,1); updateAnchorList(); updateRuleList(); };
+    tdBtn.appendChild(btn);
+    tr.appendChild(tdBtn);
+    tbody.appendChild(tr);
   });
 
   const select = document.getElementById('rule-location');
@@ -33,12 +39,19 @@ function addAnchor() {
 }
 
 function updateRuleList() {
-  const list = document.getElementById('rule-list');
-  list.innerHTML = '';
-  rules.forEach(r => {
-    const li = document.createElement('li');
-    li.textContent = `${r.name} -> move to ${r.move}`;
-    list.appendChild(li);
+  const tbody = document.querySelector('#rule-table tbody');
+  tbody.innerHTML = '';
+  rules.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.name}</td><td>*${r.location}</td><td>${r.targets}</td>` +
+      `<td>${r.subfolders ? '✓' : ''}</td><td>${r.filter.join(', ')}</td><td>${r.move}</td>`;
+    const tdBtn = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.textContent = 'X';
+    btn.onclick = () => { rules.splice(idx,1); updateRuleList(); };
+    tdBtn.appendChild(btn);
+    tr.appendChild(tdBtn);
+    tbody.appendChild(tr);
   });
 }
 
