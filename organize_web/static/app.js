@@ -1,10 +1,11 @@
 let anchors = [];
-let keywordAnchors = [];
 let rules = [];
 let configPath = '';
 let anchorEdit = -1;
-let kwEdit = -1;
 let ruleEdit = -1;
+const PAGE_SIZE = 5;
+let anchorPage = 1;
+let rulePage = 1;
 
 function browsePath() {
   fetch('/browse', { method: 'POST' })
@@ -17,27 +18,59 @@ function browsePath() {
     });
 }
 
+function filteredAnchors() {
+  const term = document.getElementById('anchor-search').value.toLowerCase();
+  return anchors.filter(a =>
+    a.key.toLowerCase().includes(term) ||
+    a.name.toLowerCase().includes(term) ||
+    a.values.join(', ').toLowerCase().includes(term)
+  );
+}
+
 function updateAnchorList() {
+  const list = filteredAnchors();
   const tbody = document.querySelector('#anchor-table tbody');
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (anchorPage > pageCount) anchorPage = pageCount;
   tbody.innerHTML = '';
-  anchors.forEach((a, idx) => {
+  const start = (anchorPage - 1) * PAGE_SIZE;
+  const pageData = list.slice(start, start + PAGE_SIZE);
+  pageData.forEach((a, idx) => {
+    const realIdx = start + idx;
     const tr = document.createElement('tr');
     tr.classList.add('fade-enter');
     tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
+    const tdMove = document.createElement('td');
+    tdMove.className = 'move-cell';
+    const up = document.createElement('button');
+    up.className = 'icon-btn';
+    up.textContent = '↑';
+    up.onclick = () => moveAnchorUp(realIdx);
+    const down = document.createElement('button');
+    down.className = 'icon-btn';
+    down.textContent = '↓';
+    down.onclick = () => moveAnchorDown(realIdx);
+    tdMove.appendChild(up);
+    tdMove.appendChild(down);
     const tdEdit = document.createElement('td');
     const edit = document.createElement('button');
-    edit.textContent = 'Edit';
-    edit.onclick = () => editAnchor(idx);
+    edit.className = 'icon-btn';
+    edit.textContent = '✎';
+    edit.onclick = () => editAnchor(realIdx);
     tdEdit.appendChild(edit);
     const tdDel = document.createElement('td');
     const del = document.createElement('button');
-    del.textContent = 'X';
-    del.onclick = () => { anchors.splice(idx,1); updateAnchorList(); updateRuleList(); };
+    del.className = 'icon-btn';
+    del.textContent = '🗑';
+    del.onclick = () => { anchors.splice(realIdx,1); updateAnchorList(); updateRuleList(); };
     tdDel.appendChild(del);
+    tr.appendChild(tdMove);
     tr.appendChild(tdEdit);
     tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
+
+  document.getElementById('anchor-page-info').textContent = `${anchorPage} / ${pageCount}`;
 
   const select = document.getElementById('rule-location');
   select.innerHTML = '';
@@ -47,6 +80,7 @@ function updateAnchorList() {
     option.textContent = `*${a.name}`;
     select.appendChild(option);
   });
+  updateRuleFilterAnchors();
 }
 
 function addAnchor() {
@@ -76,61 +110,38 @@ function editAnchor(idx) {
   document.getElementById('add-anchor-btn').textContent = 'Update Anchor';
 }
 
-function updateKeywordAnchorList() {
-  const tbody = document.querySelector('#kw-anchor-table tbody');
-  tbody.innerHTML = '';
-  keywordAnchors.forEach((a, idx) => {
-    const tr = document.createElement('tr');
-    tr.classList.add('fade-enter');
-    tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
-    const tdEdit = document.createElement('td');
-    const edit = document.createElement('button');
-    edit.textContent = 'Edit';
-    edit.onclick = () => editKeywordAnchor(idx);
-    tdEdit.appendChild(edit);
-    const tdDel = document.createElement('td');
-    const del = document.createElement('button');
-    del.textContent = 'X';
-    del.onclick = () => { keywordAnchors.splice(idx,1); updateKeywordAnchorList(); updateRuleFilterAnchors(); };
-    tdDel.appendChild(del);
-    tr.appendChild(tdEdit);
-    tr.appendChild(tdDel);
-    tbody.appendChild(tr);
-  });
-  updateRuleFilterAnchors();
+function moveAnchorUp(idx) {
+  if (idx <= 0) return;
+  [anchors[idx - 1], anchors[idx]] = [anchors[idx], anchors[idx - 1]];
+  updateAnchorList();
 }
 
-function addKeywordAnchor() {
-  const key = document.getElementById('kw-key').value.trim();
-  const name = document.getElementById('kw-name').value.trim();
-  const values = document.getElementById('kw-values').value.split(',').map(v => v.trim()).filter(v => v);
-  if (!key || !name || values.length === 0) return;
-  if (kwEdit !== -1) {
-    keywordAnchors[kwEdit] = { key, name, values };
-    kwEdit = -1;
-    document.getElementById('add-kw-btn').textContent = 'Add Keyword Anchor';
-  } else {
-    keywordAnchors.push({ key, name, values });
+function moveAnchorDown(idx) {
+  if (idx >= anchors.length - 1) return;
+  [anchors[idx + 1], anchors[idx]] = [anchors[idx], anchors[idx + 1]];
+  updateAnchorList();
+}
+
+function prevAnchorPage() {
+  if (anchorPage > 1) {
+    anchorPage--;
+    updateAnchorList();
   }
-  document.getElementById('kw-key').value = '';
-  document.getElementById('kw-name').value = '';
-  document.getElementById('kw-values').value = '';
-  updateKeywordAnchorList();
 }
 
-function editKeywordAnchor(idx) {
-  const a = keywordAnchors[idx];
-  document.getElementById('kw-key').value = a.key;
-  document.getElementById('kw-name').value = a.name;
-  document.getElementById('kw-values').value = a.values.join(', ');
-  kwEdit = idx;
-  document.getElementById('add-kw-btn').textContent = 'Update Keyword Anchor';
+function nextAnchorPage() {
+  const count = Math.max(1, Math.ceil(filteredAnchors().length / PAGE_SIZE));
+  if (anchorPage < count) {
+    anchorPage++;
+    updateAnchorList();
+  }
 }
+
 
 function updateRuleFilterAnchors() {
   const select = document.getElementById('rule-filter-anchor');
   select.innerHTML = '<option value="">(none)</option>';
-  keywordAnchors.forEach(a => {
+  anchors.forEach(a => {
     const option = document.createElement('option');
     option.value = a.name;
     option.textContent = `*${a.name}`;
@@ -138,29 +149,60 @@ function updateRuleFilterAnchors() {
   });
 }
 
+function filteredRules() {
+  const term = document.getElementById('rule-search').value.toLowerCase();
+  return rules.filter(r =>
+    r.name.toLowerCase().includes(term) ||
+    (r.location || '').toLowerCase().includes(term) ||
+    r.move.toLowerCase().includes(term)
+  );
+}
+
 function updateRuleList() {
+  const list = filteredRules();
   const tbody = document.querySelector('#rule-table tbody');
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (rulePage > pageCount) rulePage = pageCount;
   tbody.innerHTML = '';
-  rules.forEach((r, idx) => {
+  const start = (rulePage - 1) * PAGE_SIZE;
+  const pageData = list.slice(start, start + PAGE_SIZE);
+  pageData.forEach((r, idx) => {
+    const realIdx = start + idx;
     const tr = document.createElement('tr');
     tr.classList.add('fade-enter');
     const filterText = r.filter_anchor ? `*${r.filter_anchor}` : r.filter.join(', ');
     tr.innerHTML = `<td>${r.name}</td><td>*${r.location}</td><td>${r.targets}</td>` +
       `<td>${r.subfolders ? '✓' : ''}</td><td>${filterText}</td><td>${r.move}</td>`;
+    const tdMove = document.createElement('td');
+    tdMove.className = "move-cell";
+    const up = document.createElement('button');
+    up.className = 'icon-btn';
+    up.textContent = '↑';
+    up.onclick = () => moveRuleUp(realIdx);
+    const down = document.createElement('button');
+    down.className = 'icon-btn';
+    down.textContent = '↓';
+    down.onclick = () => moveRuleDown(realIdx);
+    tdMove.appendChild(up);
+    tdMove.appendChild(down);
     const tdEdit = document.createElement('td');
     const edit = document.createElement('button');
-    edit.textContent = 'Edit';
-    edit.onclick = () => editRule(idx);
+    edit.className = 'icon-btn';
+    edit.textContent = '✎';
+    edit.onclick = () => editRule(realIdx);
     tdEdit.appendChild(edit);
     const tdDel = document.createElement('td');
     const del = document.createElement('button');
-    del.textContent = 'X';
-    del.onclick = () => { rules.splice(idx,1); updateRuleList(); };
+    del.className = 'icon-btn';
+    del.textContent = '🗑';
+    del.onclick = () => { rules.splice(realIdx,1); updateRuleList(); };
     tdDel.appendChild(del);
+    tr.appendChild(tdMove);
     tr.appendChild(tdEdit);
     tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
+  document.getElementById('rule-page-info').textContent = `${rulePage} / ${pageCount}`;
 }
 
 function addRule() {
@@ -198,21 +240,48 @@ function editRule(idx) {
   document.getElementById('add-rule-btn').textContent = 'Update Rule';
 }
 
+function moveRuleUp(idx) {
+  if (idx <= 0) return;
+  [rules[idx - 1], rules[idx]] = [rules[idx], rules[idx - 1]];
+  updateRuleList();
+}
+
+function moveRuleDown(idx) {
+  if (idx >= rules.length - 1) return;
+  [rules[idx + 1], rules[idx]] = [rules[idx], rules[idx + 1]];
+  updateRuleList();
+}
+
+function prevRulePage() {
+  if (rulePage > 1) {
+    rulePage--;
+    updateRuleList();
+  }
+}
+
+function nextRulePage() {
+  const count = Math.max(1, Math.ceil(filteredRules().length / PAGE_SIZE));
+  if (rulePage < count) {
+    rulePage++;
+    updateRuleList();
+  }
+}
+
 function saveYaml() {
   const path = document.getElementById('config-path').value.trim();
   configPath = path;
   fetch('/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path, data: { anchors, keyword_anchors: keywordAnchors, rules } })
-  }).then(resp => resp.json()).then(() => alert('Saved')); 
+    body: JSON.stringify({ path, data: { anchors, rules } })
+  }).then(resp => resp.json()).then(() => alert('Saved'));
 }
 
 function downloadYaml() {
   fetch('/export', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data: { anchors, keyword_anchors: keywordAnchors, rules } })
+    body: JSON.stringify({ data: { anchors, rules } })
   })
     .then(resp => resp.json())
     .then(data => {
@@ -237,10 +306,8 @@ function loadYaml() {
     .then(resp => resp.json())
     .then(data => {
       anchors = data.anchors || [];
-      keywordAnchors = data.keyword_anchors || [];
       rules = data.rules || [];
       updateAnchorList();
-      updateKeywordAnchorList();
       updateRuleList();
     });
 }
