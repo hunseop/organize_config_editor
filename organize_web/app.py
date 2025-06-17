@@ -23,7 +23,7 @@ def build_yaml(data):
         seq = CommentedSeq(vals)
         name = a.get('name')
         if name:
-            seq.yaml_set_anchor(str(name))
+            seq.yaml_set_anchor(str(name), always_dump=True)
             anchor_objects[str(name)] = seq
         root[a.get('key')] = seq
 
