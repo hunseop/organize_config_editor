@@ -25,29 +25,20 @@
         <input id="anchor-values" placeholder="Values comma separated" />
         <button id="add-anchor-btn" onclick="addAnchor()">Add Anchor</button>
       </div>
+      <input id="anchor-search" class="search-input" placeholder="Search" oninput="updateAnchorList()" />
       <table id="anchor-table">
         <thead>
-          <tr><th>Key</th><th>Anchor</th><th>Values</th><th>Edit</th><th>Del</th></tr>
+          <tr><th>Key</th><th>Anchor</th><th>Values</th><th>Move</th><th>Edit</th><th>Del</th></tr>
         </thead>
         <tbody></tbody>
       </table>
+      <div class="pagination">
+        <button class="icon-btn" onclick="prevAnchorPage()">◀</button>
+        <span id="anchor-page-info">1/1</span>
+        <button class="icon-btn" onclick="nextAnchorPage()">▶</button>
+      </div>
     </section>
 
-    <section>
-      <h2>Keyword Anchors</h2>
-      <div class="form-row">
-        <input id="kw-key" placeholder="Variable name (e.g. fw_filter)" />
-        <input id="kw-name" placeholder="Anchor name (e.g. fw)" />
-        <input id="kw-values" placeholder="Keywords comma separated" />
-        <button id="add-kw-btn" onclick="addKeywordAnchor()">Add Keyword Anchor</button>
-      </div>
-      <table id="kw-anchor-table">
-        <thead>
-          <tr><th>Key</th><th>Anchor</th><th>Values</th><th>Edit</th><th>Del</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
 
     <section>
       <h2>Rules</h2>
@@ -64,14 +55,20 @@
         <input id="rule-move" placeholder="Move path" />
         <button id="add-rule-btn" onclick="addRule()">Add Rule</button>
       </div>
+      <input id="rule-search" class="search-input" placeholder="Search" oninput="updateRuleList()" />
       <table id="rule-table">
         <thead>
           <tr>
-            <th>Name</th><th>Location</th><th>Targets</th><th>Sub</th><th>Filter</th><th>Move</th><th>Edit</th><th>Del</th>
+            <th>Name</th><th>Location</th><th>Targets</th><th>Sub</th><th>Filter</th><th>Move Path</th><th>Order</th><th>Edit</th><th>Del</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
+      <div class="pagination">
+        <button class="icon-btn" onclick="prevRulePage()">◀</button>
+        <span id="rule-page-info">1/1</span>
+        <button class="icon-btn" onclick="nextRulePage()">▶</button>
+      </div>
     </section>
 
     <button onclick="downloadYaml()">Download YAML</button>

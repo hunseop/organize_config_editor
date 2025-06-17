@@ -11,12 +11,11 @@ yaml = YAML()
 
 def build_yaml(data):
     anchors = data.get('anchors', [])
-    keyword_anchors = data.get('keyword_anchors', [])
     rules = data.get('rules', [])
 
     root = CommentedMap()
     anchor_objects = {}
-    for a in anchors + keyword_anchors:
+    for a in anchors:
         vals = a.get('values', [])
         if not isinstance(vals, list):
             vals = [v for v in [vals] if v not in (None, '')]
@@ -61,8 +60,6 @@ def parse_yaml(text):
     y = YAML(typ='rt')
     data = y.load(text)
     anchors = []
-    anchor_usage_loc = set()
-    anchor_usage_kw = set()
 
     for key, value in data.items():
         if key == 'rules':
@@ -87,7 +84,6 @@ def parse_yaml(text):
         loc = r.get('locations')
         if getattr(loc, 'anchor', None):
             rule['location'] = loc.anchor.value
-            anchor_usage_loc.add(loc.anchor.value)
         elif isinstance(loc, list):
             rule['location'] = ''
         else:
@@ -98,21 +94,12 @@ def parse_yaml(text):
             contains = filt[0].get('name', {}).get('contains')
             if getattr(contains, 'anchor', None):
                 rule['filter_anchor'] = contains.anchor.value
-                anchor_usage_kw.add(contains.anchor.value)
             elif isinstance(contains, list):
                 rule['filter'] = list(contains)
 
         rules.append(rule)
 
-    path_anchors = []
-    keyword_anchors = []
-    for a in anchors:
-        if a['name'] in anchor_usage_kw and a['name'] not in anchor_usage_loc:
-            keyword_anchors.append(a)
-        else:
-            path_anchors.append(a)
-
-    return {'anchors': path_anchors, 'keyword_anchors': keyword_anchors, 'rules': rules}
+    return {'anchors': anchors, 'rules': rules}
 
 @app.route('/')
 def index():
@@ -145,7 +132,7 @@ def load_yaml():
     req = request.get_json()
     path = req.get('path') or CONFIG_PATH
     if not os.path.isfile(path):
-        return jsonify({'anchors': [], 'keyword_anchors': [], 'rules': []})
+        return jsonify({'anchors': [], 'rules': []})
     with open(path, 'r', encoding='cp949') as f:
         content = f.read()
     data = parse_yaml(content)
