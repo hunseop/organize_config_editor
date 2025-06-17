@@ -1,10 +1,13 @@
 let anchors = [];
-let keywordAnchors = [];
 let rules = [];
 let configPath = '';
 let anchorEdit = -1;
-let kwEdit = -1;
 let ruleEdit = -1;
+const PAGE_SIZE = 5;
+let anchorPage = 1;
+let rulePage = 1;
+let anchorDrag = null;
+let ruleDrag = null;
 
 function browsePath() {
   fetch('/browse', { method: 'POST' })
@@ -17,27 +20,45 @@ function browsePath() {
     });
 }
 
+function filteredAnchors() {
+  const term = document.getElementById('anchor-search').value.toLowerCase();
+  return anchors.filter(a =>
+    a.key.toLowerCase().includes(term) ||
+    a.name.toLowerCase().includes(term) ||
+    a.values.join(', ').toLowerCase().includes(term)
+  );
+}
+
 function updateAnchorList() {
+  const list = filteredAnchors();
   const tbody = document.querySelector('#anchor-table tbody');
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (anchorPage > pageCount) anchorPage = pageCount;
   tbody.innerHTML = '';
-  anchors.forEach((a, idx) => {
+  const start = (anchorPage - 1) * PAGE_SIZE;
+  const pageData = list.slice(start, start + PAGE_SIZE);
+  pageData.forEach((a, idx) => {
+    const realIdx = start + idx;
     const tr = document.createElement('tr');
     tr.classList.add('fade-enter');
-    tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
-    const tdEdit = document.createElement('td');
-    const edit = document.createElement('button');
-    edit.textContent = 'Edit';
-    edit.onclick = () => editAnchor(idx);
-    tdEdit.appendChild(edit);
-    const tdDel = document.createElement('td');
-    const del = document.createElement('button');
-    del.textContent = 'X';
-    del.onclick = () => { anchors.splice(idx,1); updateAnchorList(); updateRuleList(); };
-    tdDel.appendChild(del);
-    tr.appendChild(tdEdit);
-    tr.appendChild(tdDel);
+    tr.draggable = true;
+    tr.dataset.index = realIdx;
+    tr.addEventListener('dragstart', () => { anchorDrag = realIdx; });
+    tr.addEventListener('dragover', e => e.preventDefault());
+    tr.addEventListener('drop', () => moveAnchor(anchorDrag, realIdx));
+
+    tr.innerHTML = `<td class="drag-handle">↕</td><td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
+
+    const tdAction = document.createElement('td');
+    tdAction.className = 'actions';
+    tdAction.innerHTML = `<button onclick="toggleAnchorMenu(this)">Actions</button>` +
+      `<div class="action-menu"><button onclick="editAnchor(${realIdx})">Edit</button>` +
+      `<button onclick="deleteAnchor(${realIdx})">Delete</button></div>`;
+    tr.appendChild(tdAction);
     tbody.appendChild(tr);
   });
+
+  document.getElementById('anchor-page-info').textContent = `${anchorPage} / ${pageCount}`;
 
   const select = document.getElementById('rule-location');
   select.innerHTML = '';
@@ -47,6 +68,7 @@ function updateAnchorList() {
     option.textContent = `*${a.name}`;
     select.appendChild(option);
   });
+  updateRuleFilterAnchors();
 }
 
 function addAnchor() {
@@ -76,61 +98,45 @@ function editAnchor(idx) {
   document.getElementById('add-anchor-btn').textContent = 'Update Anchor';
 }
 
-function updateKeywordAnchorList() {
-  const tbody = document.querySelector('#kw-anchor-table tbody');
-  tbody.innerHTML = '';
-  keywordAnchors.forEach((a, idx) => {
-    const tr = document.createElement('tr');
-    tr.classList.add('fade-enter');
-    tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
-    const tdEdit = document.createElement('td');
-    const edit = document.createElement('button');
-    edit.textContent = 'Edit';
-    edit.onclick = () => editKeywordAnchor(idx);
-    tdEdit.appendChild(edit);
-    const tdDel = document.createElement('td');
-    const del = document.createElement('button');
-    del.textContent = 'X';
-    del.onclick = () => { keywordAnchors.splice(idx,1); updateKeywordAnchorList(); updateRuleFilterAnchors(); };
-    tdDel.appendChild(del);
-    tr.appendChild(tdEdit);
-    tr.appendChild(tdDel);
-    tbody.appendChild(tr);
-  });
-  updateRuleFilterAnchors();
+function moveAnchor(from, to) {
+  if (from === to || from == null || to == null) return;
+  const item = anchors.splice(from, 1)[0];
+  anchors.splice(to, 0, item);
+  updateAnchorList();
 }
 
-function addKeywordAnchor() {
-  const key = document.getElementById('kw-key').value.trim();
-  const name = document.getElementById('kw-name').value.trim();
-  const values = document.getElementById('kw-values').value.split(',').map(v => v.trim()).filter(v => v);
-  if (!key || !name || values.length === 0) return;
-  if (kwEdit !== -1) {
-    keywordAnchors[kwEdit] = { key, name, values };
-    kwEdit = -1;
-    document.getElementById('add-kw-btn').textContent = 'Add Keyword Anchor';
-  } else {
-    keywordAnchors.push({ key, name, values });
+function prevAnchorPage() {
+  if (anchorPage > 1) {
+    anchorPage--;
+    updateAnchorList();
   }
-  document.getElementById('kw-key').value = '';
-  document.getElementById('kw-name').value = '';
-  document.getElementById('kw-values').value = '';
-  updateKeywordAnchorList();
 }
 
-function editKeywordAnchor(idx) {
-  const a = keywordAnchors[idx];
-  document.getElementById('kw-key').value = a.key;
-  document.getElementById('kw-name').value = a.name;
-  document.getElementById('kw-values').value = a.values.join(', ');
-  kwEdit = idx;
-  document.getElementById('add-kw-btn').textContent = 'Update Keyword Anchor';
+function nextAnchorPage() {
+  const count = Math.max(1, Math.ceil(filteredAnchors().length / PAGE_SIZE));
+  if (anchorPage < count) {
+    anchorPage++;
+    updateAnchorList();
+  }
 }
+
+function toggleAnchorMenu(btn) {
+  document.querySelectorAll('.action-menu.show').forEach(m => m.classList.remove('show'));
+  const menu = btn.nextElementSibling;
+  menu.classList.toggle('show');
+}
+
+function deleteAnchor(idx) {
+  anchors.splice(idx, 1);
+  updateAnchorList();
+  updateRuleList();
+}
+
 
 function updateRuleFilterAnchors() {
   const select = document.getElementById('rule-filter-anchor');
   select.innerHTML = '<option value="">(none)</option>';
-  keywordAnchors.forEach(a => {
+  anchors.forEach(a => {
     const option = document.createElement('option');
     option.value = a.name;
     option.textContent = `*${a.name}`;
@@ -138,29 +144,46 @@ function updateRuleFilterAnchors() {
   });
 }
 
+function filteredRules() {
+  const term = document.getElementById('rule-search').value.toLowerCase();
+  return rules.filter(r =>
+    r.name.toLowerCase().includes(term) ||
+    (r.location || '').toLowerCase().includes(term) ||
+    r.move.toLowerCase().includes(term)
+  );
+}
+
 function updateRuleList() {
+  const list = filteredRules();
   const tbody = document.querySelector('#rule-table tbody');
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (rulePage > pageCount) rulePage = pageCount;
   tbody.innerHTML = '';
-  rules.forEach((r, idx) => {
+  const start = (rulePage - 1) * PAGE_SIZE;
+  const pageData = list.slice(start, start + PAGE_SIZE);
+  pageData.forEach((r, idx) => {
+    const realIdx = start + idx;
     const tr = document.createElement('tr');
     tr.classList.add('fade-enter');
+    tr.draggable = true;
+    tr.dataset.index = realIdx;
+    tr.addEventListener('dragstart', () => { ruleDrag = realIdx; });
+    tr.addEventListener('dragover', e => e.preventDefault());
+    tr.addEventListener('drop', () => moveRule(ruleDrag, realIdx));
+
     const filterText = r.filter_anchor ? `*${r.filter_anchor}` : r.filter.join(', ');
-    tr.innerHTML = `<td>${r.name}</td><td>*${r.location}</td><td>${r.targets}</td>` +
+    tr.innerHTML = `<td class="drag-handle">↕</td><td>${r.name}</td><td>*${r.location}</td><td>${r.targets}</td>` +
       `<td>${r.subfolders ? '✓' : ''}</td><td>${filterText}</td><td>${r.move}</td>`;
-    const tdEdit = document.createElement('td');
-    const edit = document.createElement('button');
-    edit.textContent = 'Edit';
-    edit.onclick = () => editRule(idx);
-    tdEdit.appendChild(edit);
-    const tdDel = document.createElement('td');
-    const del = document.createElement('button');
-    del.textContent = 'X';
-    del.onclick = () => { rules.splice(idx,1); updateRuleList(); };
-    tdDel.appendChild(del);
-    tr.appendChild(tdEdit);
-    tr.appendChild(tdDel);
+
+    const tdAction = document.createElement('td');
+    tdAction.className = 'actions';
+    tdAction.innerHTML = `<button onclick="toggleRuleMenu(this)">Actions</button>` +
+      `<div class="action-menu"><button onclick="editRule(${realIdx})">Edit</button>` +
+      `<button onclick="deleteRule(${realIdx})">Delete</button></div>`;
+    tr.appendChild(tdAction);
     tbody.appendChild(tr);
   });
+  document.getElementById('rule-page-info').textContent = `${rulePage} / ${pageCount}`;
 }
 
 function addRule() {
@@ -198,21 +221,54 @@ function editRule(idx) {
   document.getElementById('add-rule-btn').textContent = 'Update Rule';
 }
 
+function moveRule(from, to) {
+  if (from === to || from == null || to == null) return;
+  const item = rules.splice(from, 1)[0];
+  rules.splice(to, 0, item);
+  updateRuleList();
+}
+
+function prevRulePage() {
+  if (rulePage > 1) {
+    rulePage--;
+    updateRuleList();
+  }
+}
+
+function nextRulePage() {
+  const count = Math.max(1, Math.ceil(filteredRules().length / PAGE_SIZE));
+  if (rulePage < count) {
+    rulePage++;
+    updateRuleList();
+  }
+}
+
+function toggleRuleMenu(btn) {
+  document.querySelectorAll('.action-menu.show').forEach(m => m.classList.remove('show'));
+  const menu = btn.nextElementSibling;
+  menu.classList.toggle('show');
+}
+
+function deleteRule(idx) {
+  rules.splice(idx, 1);
+  updateRuleList();
+}
+
 function saveYaml() {
   const path = document.getElementById('config-path').value.trim();
   configPath = path;
   fetch('/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path, data: { anchors, keyword_anchors: keywordAnchors, rules } })
-  }).then(resp => resp.json()).then(() => alert('Saved')); 
+    body: JSON.stringify({ path, data: { anchors, rules } })
+  }).then(resp => resp.json()).then(() => alert('Saved'));
 }
 
 function downloadYaml() {
   fetch('/export', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data: { anchors, keyword_anchors: keywordAnchors, rules } })
+    body: JSON.stringify({ data: { anchors, rules } })
   })
     .then(resp => resp.json())
     .then(data => {
@@ -237,10 +293,14 @@ function loadYaml() {
     .then(resp => resp.json())
     .then(data => {
       anchors = data.anchors || [];
-      keywordAnchors = data.keyword_anchors || [];
       rules = data.rules || [];
       updateAnchorList();
-      updateKeywordAnchorList();
       updateRuleList();
     });
 }
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.actions')) {
+    document.querySelectorAll('.action-menu.show').forEach(m => m.classList.remove('show'));
+  }
+});
