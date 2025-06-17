@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organize Config Editor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container glass">
+    <h1>Organize Config Editor</h1>
+
+    <div class="path-row form-row">
+      <input id="config-path" value="organize_web/config.yaml" placeholder="config.yaml path" />
+      <button onclick="browsePath()">Browse</button>
+      <button onclick="loadYaml()">Load</button>
+      <button onclick="saveYaml()">Save</button>
+    </div>
+
+    <section>
+      <h2>Anchors</h2>
+      <div class="form-row">
+        <input id="anchor-key" placeholder="Variable name (e.g. work_folders)" />
+        <input id="anchor-name" placeholder="Anchor name (e.g. work)" />
+        <input id="anchor-values" placeholder="Values comma separated" />
+        <button id="add-anchor-btn" onclick="addAnchor()">Add Anchor</button>
+      </div>
+      <table id="anchor-table">
+        <thead>
+          <tr><th>Key</th><th>Anchor</th><th>Values</th><th>Edit</th><th>Del</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Keyword Anchors</h2>
+      <div class="form-row">
+        <input id="kw-key" placeholder="Variable name (e.g. fw_filter)" />
+        <input id="kw-name" placeholder="Anchor name (e.g. fw)" />
+        <input id="kw-values" placeholder="Keywords comma separated" />
+        <button id="add-kw-btn" onclick="addKeywordAnchor()">Add Keyword Anchor</button>
+      </div>
+      <table id="kw-anchor-table">
+        <thead>
+          <tr><th>Key</th><th>Anchor</th><th>Values</th><th>Edit</th><th>Del</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Rules</h2>
+      <div class="form-row">
+        <input id="rule-name" placeholder="Rule name" />
+        <select id="rule-location"></select>
+        <label><input type="checkbox" id="rule-subfolders" /> Subfolders</label>
+        <select id="rule-targets">
+          <option value="files">files</option>
+          <option value="dirs">dirs</option>
+        </select>
+        <select id="rule-filter-anchor"></select>
+        <input id="rule-filter" placeholder="Filter keywords comma separated" />
+        <input id="rule-move" placeholder="Move path" />
+        <button id="add-rule-btn" onclick="addRule()">Add Rule</button>
+      </div>
+      <table id="rule-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Location</th><th>Targets</th><th>Sub</th><th>Filter</th><th>Move</th><th>Edit</th><th>Del</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <button onclick="downloadYaml()">Download YAML</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

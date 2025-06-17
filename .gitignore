@@ -1,0 +1,5 @@
+__pycache__/
+organize_web/history/
+venv/
+.venv/
+ENV/
