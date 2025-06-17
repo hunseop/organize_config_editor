@@ -88,3 +88,22 @@ th {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.move-cell {
+  display: flex;
+  flex-direction: column;
+}
+.move-cell button {
+  margin: 1px 0;
+  padding: 2px 4px;
+}
+
+.search-input {
+  margin-top: 5px;
+}

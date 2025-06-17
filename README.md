@@ -1,6 +1,6 @@
 # Organize Config Editor
 
-Organize의 `config.yaml` 파일을 시각적으로 작성하기 위한 간단한 웹 도구입니다. Flask 백엔드와 HTML/CSS/JS 기반의 SPA로 구성되어 있으며, Anchor와 Rule을 추가하여 YAML 파일로 다운로드할 수 있습니다. 기존 YAML을 불러와 편집할 수도 있고, 위치용 앵커와 필터 키워드용 앵커를 각각 정의하여 재사용할 수 있습니다.
+Organize의 `config.yaml` 파일을 시각적으로 작성하기 위한 간단한 웹 도구입니다. Flask 백엔드와 HTML/CSS/JS 기반의 SPA로 구성되어 있으며, Anchor와 Rule을 추가하여 YAML 파일로 다운로드할 수 있습니다. 기존 YAML을 불러와 편집할 수도 있고, 모든 앵커를 하나의 목록에서 관리하여 위치나 필터에 자유롭게 사용할 수 있습니다.
 
 ## 실행 방법
 
