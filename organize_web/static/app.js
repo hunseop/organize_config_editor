@@ -5,6 +5,10 @@ let configPath = '';
 let anchorEdit = -1;
 let kwEdit = -1;
 let ruleEdit = -1;
+const PAGE_SIZE = 5;
+let anchorPage = 1;
+let kwPage = 1;
+let rulePage = 1;
 
 function browsePath() {
   fetch('/browse', { method: 'POST' })
@@ -17,27 +21,54 @@ function browsePath() {
     });
 }
 
+function filteredAnchors() {
+  const term = document.getElementById('anchor-search').value.toLowerCase();
+  return anchors.filter(a =>
+    a.key.toLowerCase().includes(term) ||
+    a.name.toLowerCase().includes(term) ||
+    a.values.join(', ').toLowerCase().includes(term)
+  );
+}
+
 function updateAnchorList() {
+  const list = filteredAnchors();
   const tbody = document.querySelector('#anchor-table tbody');
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (anchorPage > pageCount) anchorPage = pageCount;
   tbody.innerHTML = '';
-  anchors.forEach((a, idx) => {
+  const start = (anchorPage - 1) * PAGE_SIZE;
+  const pageData = list.slice(start, start + PAGE_SIZE);
+  pageData.forEach((a, idx) => {
+    const realIdx = start + idx;
     const tr = document.createElement('tr');
     tr.classList.add('fade-enter');
     tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
+    const tdMove = document.createElement('td');
+    const up = document.createElement('button');
+    up.textContent = '↑';
+    up.onclick = () => moveAnchorUp(realIdx);
+    const down = document.createElement('button');
+    down.textContent = '↓';
+    down.onclick = () => moveAnchorDown(realIdx);
+    tdMove.appendChild(up);
+    tdMove.appendChild(down);
     const tdEdit = document.createElement('td');
     const edit = document.createElement('button');
     edit.textContent = 'Edit';
-    edit.onclick = () => editAnchor(idx);
+    edit.onclick = () => editAnchor(realIdx);
     tdEdit.appendChild(edit);
     const tdDel = document.createElement('td');
     const del = document.createElement('button');
     del.textContent = 'X';
-    del.onclick = () => { anchors.splice(idx,1); updateAnchorList(); updateRuleList(); };
+    del.onclick = () => { anchors.splice(realIdx,1); updateAnchorList(); updateRuleList(); };
     tdDel.appendChild(del);
+    tr.appendChild(tdMove);
     tr.appendChild(tdEdit);
     tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
+
+  document.getElementById('anchor-page-info').textContent = `${anchorPage} / ${pageCount}`;
 
   const select = document.getElementById('rule-location');
   select.innerHTML = '';
@@ -76,27 +107,80 @@ function editAnchor(idx) {
   document.getElementById('add-anchor-btn').textContent = 'Update Anchor';
 }
 
+function moveAnchorUp(idx) {
+  if (idx <= 0) return;
+  [anchors[idx - 1], anchors[idx]] = [anchors[idx], anchors[idx - 1]];
+  updateAnchorList();
+}
+
+function moveAnchorDown(idx) {
+  if (idx >= anchors.length - 1) return;
+  [anchors[idx + 1], anchors[idx]] = [anchors[idx], anchors[idx + 1]];
+  updateAnchorList();
+}
+
+function prevAnchorPage() {
+  if (anchorPage > 1) {
+    anchorPage--;
+    updateAnchorList();
+  }
+}
+
+function nextAnchorPage() {
+  const count = Math.max(1, Math.ceil(filteredAnchors().length / PAGE_SIZE));
+  if (anchorPage < count) {
+    anchorPage++;
+    updateAnchorList();
+  }
+}
+
+function filteredKeywordAnchors() {
+  const term = document.getElementById('kw-search').value.toLowerCase();
+  return keywordAnchors.filter(a =>
+    a.key.toLowerCase().includes(term) ||
+    a.name.toLowerCase().includes(term) ||
+    a.values.join(', ').toLowerCase().includes(term)
+  );
+}
+
 function updateKeywordAnchorList() {
+  const list = filteredKeywordAnchors();
   const tbody = document.querySelector('#kw-anchor-table tbody');
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (kwPage > pageCount) kwPage = pageCount;
   tbody.innerHTML = '';
-  keywordAnchors.forEach((a, idx) => {
+  const start = (kwPage - 1) * PAGE_SIZE;
+  const pageData = list.slice(start, start + PAGE_SIZE);
+  pageData.forEach((a, idx) => {
+    const realIdx = start + idx;
     const tr = document.createElement('tr');
     tr.classList.add('fade-enter');
     tr.innerHTML = `<td>${a.key}</td><td>&${a.name}</td><td>${a.values.join(', ')}</td>`;
+    const tdMove = document.createElement('td');
+    const up = document.createElement('button');
+    up.textContent = '↑';
+    up.onclick = () => moveKwUp(realIdx);
+    const down = document.createElement('button');
+    down.textContent = '↓';
+    down.onclick = () => moveKwDown(realIdx);
+    tdMove.appendChild(up);
+    tdMove.appendChild(down);
     const tdEdit = document.createElement('td');
     const edit = document.createElement('button');
     edit.textContent = 'Edit';
-    edit.onclick = () => editKeywordAnchor(idx);
+    edit.onclick = () => editKeywordAnchor(realIdx);
     tdEdit.appendChild(edit);
     const tdDel = document.createElement('td');
     const del = document.createElement('button');
     del.textContent = 'X';
-    del.onclick = () => { keywordAnchors.splice(idx,1); updateKeywordAnchorList(); updateRuleFilterAnchors(); };
+    del.onclick = () => { keywordAnchors.splice(realIdx,1); updateKeywordAnchorList(); updateRuleFilterAnchors(); };
     tdDel.appendChild(del);
+    tr.appendChild(tdMove);
     tr.appendChild(tdEdit);
     tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
+  document.getElementById('kw-page-info').textContent = `${kwPage} / ${pageCount}`;
   updateRuleFilterAnchors();
 }
 
@@ -127,6 +211,33 @@ function editKeywordAnchor(idx) {
   document.getElementById('add-kw-btn').textContent = 'Update Keyword Anchor';
 }
 
+function moveKwUp(idx) {
+  if (idx <= 0) return;
+  [keywordAnchors[idx - 1], keywordAnchors[idx]] = [keywordAnchors[idx], keywordAnchors[idx - 1]];
+  updateKeywordAnchorList();
+}
+
+function moveKwDown(idx) {
+  if (idx >= keywordAnchors.length - 1) return;
+  [keywordAnchors[idx + 1], keywordAnchors[idx]] = [keywordAnchors[idx], keywordAnchors[idx + 1]];
+  updateKeywordAnchorList();
+}
+
+function prevKwPage() {
+  if (kwPage > 1) {
+    kwPage--;
+    updateKeywordAnchorList();
+  }
+}
+
+function nextKwPage() {
+  const count = Math.max(1, Math.ceil(filteredKeywordAnchors().length / PAGE_SIZE));
+  if (kwPage < count) {
+    kwPage++;
+    updateKeywordAnchorList();
+  }
+}
+
 function updateRuleFilterAnchors() {
   const select = document.getElementById('rule-filter-anchor');
   select.innerHTML = '<option value="">(none)</option>';
@@ -138,29 +249,55 @@ function updateRuleFilterAnchors() {
   });
 }
 
+function filteredRules() {
+  const term = document.getElementById('rule-search').value.toLowerCase();
+  return rules.filter(r =>
+    r.name.toLowerCase().includes(term) ||
+    (r.location || '').toLowerCase().includes(term) ||
+    r.move.toLowerCase().includes(term)
+  );
+}
+
 function updateRuleList() {
+  const list = filteredRules();
   const tbody = document.querySelector('#rule-table tbody');
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (rulePage > pageCount) rulePage = pageCount;
   tbody.innerHTML = '';
-  rules.forEach((r, idx) => {
+  const start = (rulePage - 1) * PAGE_SIZE;
+  const pageData = list.slice(start, start + PAGE_SIZE);
+  pageData.forEach((r, idx) => {
+    const realIdx = start + idx;
     const tr = document.createElement('tr');
     tr.classList.add('fade-enter');
     const filterText = r.filter_anchor ? `*${r.filter_anchor}` : r.filter.join(', ');
     tr.innerHTML = `<td>${r.name}</td><td>*${r.location}</td><td>${r.targets}</td>` +
       `<td>${r.subfolders ? '✓' : ''}</td><td>${filterText}</td><td>${r.move}</td>`;
+    const tdMove = document.createElement('td');
+    const up = document.createElement('button');
+    up.textContent = '↑';
+    up.onclick = () => moveRuleUp(realIdx);
+    const down = document.createElement('button');
+    down.textContent = '↓';
+    down.onclick = () => moveRuleDown(realIdx);
+    tdMove.appendChild(up);
+    tdMove.appendChild(down);
     const tdEdit = document.createElement('td');
     const edit = document.createElement('button');
     edit.textContent = 'Edit';
-    edit.onclick = () => editRule(idx);
+    edit.onclick = () => editRule(realIdx);
     tdEdit.appendChild(edit);
     const tdDel = document.createElement('td');
     const del = document.createElement('button');
     del.textContent = 'X';
-    del.onclick = () => { rules.splice(idx,1); updateRuleList(); };
+    del.onclick = () => { rules.splice(realIdx,1); updateRuleList(); };
     tdDel.appendChild(del);
+    tr.appendChild(tdMove);
     tr.appendChild(tdEdit);
     tr.appendChild(tdDel);
     tbody.appendChild(tr);
   });
+  document.getElementById('rule-page-info').textContent = `${rulePage} / ${pageCount}`;
 }
 
 function addRule() {
@@ -196,6 +333,33 @@ function editRule(idx) {
   document.getElementById('rule-move').value = r.move;
   ruleEdit = idx;
   document.getElementById('add-rule-btn').textContent = 'Update Rule';
+}
+
+function moveRuleUp(idx) {
+  if (idx <= 0) return;
+  [rules[idx - 1], rules[idx]] = [rules[idx], rules[idx - 1]];
+  updateRuleList();
+}
+
+function moveRuleDown(idx) {
+  if (idx >= rules.length - 1) return;
+  [rules[idx + 1], rules[idx]] = [rules[idx], rules[idx + 1]];
+  updateRuleList();
+}
+
+function prevRulePage() {
+  if (rulePage > 1) {
+    rulePage--;
+    updateRuleList();
+  }
+}
+
+function nextRulePage() {
+  const count = Math.max(1, Math.ceil(filteredRules().length / PAGE_SIZE));
+  if (rulePage < count) {
+    rulePage++;
+    updateRuleList();
+  }
 }
 
 function saveYaml() {

@@ -88,3 +88,13 @@ th {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.search-input {
+  margin-top: 5px;
+}
